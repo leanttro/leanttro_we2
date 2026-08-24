@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Estoque WPP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .topbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .topbar h1 { font-size: 24px; }
+
+        .topbar-actions { display: flex; gap: 15px; align-items: center; }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff6b6b;
+        }
+
+        .status-dot.on { background: #51cf66; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary { background: white; color: #667eea; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-danger { background: rgba(255,255,255,0.2); color: white; }
+        .btn-danger:hover { background: rgba(255,255,255,0.3); }
+        .btn-small { padding: 7px 14px; font-size: 12px; }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+        .btn-outline:hover { background: #f0f0ff; }
+
+        .btn-outline-danger {
+            background: white;
+            color: #c33;
+            border: 1px solid #c33;
+        }
+        .btn-outline-danger:hover { background: #fee; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: start;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card h2 {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .conexao-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .conexao-linha:last-child { border-bottom: none; }
+        .conexao-linha .label { color: #999; }
+        .conexao-linha .valor { font-weight: 600; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-ok { background: #e0f9e6; color: #2b8a3e; }
+        .badge-off { background: #ffe0e0; color: #c33; }
+        .badge-plan-ia { background: #eee0ff; color: #7048e8; }
+        .badge-plan-form { background: #e0f2fe; color: #0369a1; }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 1.6fr 1.6fr 1fr 1fr 1.4fr;
+            gap: 15px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 1.6fr 1.6fr 1fr 1fr 1.4fr;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .table-row:last-child { border-bottom: none; }
+        .table-row:hover { background: #f9f9f9; }
+
+        .numeros-lista {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .select-plano {
+            padding: 6px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 460px;
+            width: 90%;
+        }
+
+        .modal-content h2 { margin-bottom: 20px; color: #333; }
+
+        .form-group { margin-bottom: 18px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .btn-secondary { background: #e0e0e0; color: #333; }
+        .btn-secondary:hover { background: #d0d0d0; }
+
+        .empty-state {
+            padding: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #333;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: #c33; }
+
+        @media (max-width: 900px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .table-header, .table-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>🛠️ Estoque WPP — Admin</h1>
+        <div class="topbar-actions">
+            <div class="status-pill">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusTexto">verificando...</span>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalCliente()">+ Novo Cliente</button>
+            <button class="btn btn-danger" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- CONEXÃO DO BOT -->
+        <div class="grid-2">
+            <div class="card">
+                <h2>📡 Conexão do WhatsApp</h2>
+                <div class="conexao-linha">
+                    <span class="label">Número ativo</span>
+                    <span class="valor" id="conexaoNumero">—</span>
+                </div>
+                <div class="conexao-linha">
+                    <span class="label">Status</span>
+                    <span class="valor" id="conexaoStatus">—</span>
+                </div>
+                <div class="conexao-linha">
+                    <span class="label">Atualizado em</span>
+                    <span class="valor" id="conexaoAtualizado">—</span>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:18px;">
+                    <button class="btn btn-outline btn-small" onclick="verQrCode()">Ver QR Code</button>
+                    <button class="btn btn-outline-danger btn-small" onclick="resetarConexao()">Resetar sessão</button>
+                    <button class="btn btn-outline btn-small" onclick="notificarClientes()">Notificar clientes</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🕘 Últimas trocas de número</h2>
+                <div id="logTrocas">
+                    <div class="empty-state">Carregando...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENTES -->
+        <h3 class="section-title">
+            👥 Clientes
+            <span style="font-size:13px; font-weight:400; color:#999;" id="totalClientesLabel"></span>
+        </h3>
+        <div class="table-container">
+            <div class="table-header">
+                <div>Negócio / Email</div>
+                <div>Números autorizados</div>
+                <div>Plano</div>
+                <div>Status</div>
+                <div>Ações</div>
+            </div>
+            <div id="tabelaClientes">
+                <div class="empty-state">Carregando clientes...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NOVO CLIENTE -->
+    <div id="modalCliente" class="modal">
+        <div class="modal-content">
+            <h2>Novo Cliente</h2>
+
+            <div class="form-group">
+                <label>Nome do negócio</label>
+                <input type="text" id="novoNomeNegocio" placeholder="ex: Loja do João">
+            </div>
+
+            <div class="form-group">
+                <label>Email (login do painel)</label>
+                <input type="email" id="novoEmail" placeholder="cliente@email.com">
+            </div>
+
+            <div class="form-group">
+                <label>Senha inicial</label>
+                <input type="password" id="novaSenha" placeholder="••••••••">
+            </div>
+
+            <div class="form-group">
+                <label>Plano</label>
+                <select id="novoPlano">
+                    <option value="formulario">Formulário (sem IA)</option>
+                    <option value="ia">IA (Groq)</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="fecharModalCliente()">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarCliente()">Criar cliente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ADICIONAR NÚMERO -->
+    <div id="modalNumero" class="modal">
+        <div class="modal-content">
+            <h2>Adicionar número autorizado</h2>
+            <input type="hidden" id="numeroClienteId">
+
+            <div class="form-group">
+                <label>Número (com DDI, só dígitos)</label>
+                <input type="text" id="novoNumero" placeholder="ex: 5511999999999">
+            </div>
+
+            <div class="form-group">
+                <label>Nome (opcional)</label>
+                <input type="text" id="novoNumeroNome" placeholder="ex: João (estoquista)">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="fecharModalNumero()">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarNumero()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_URL = '';
+        const adminToken = localStorage.getItem('admin_token');
+
+        if (!adminToken) {
+            window.location.href = 'login.html';
+        }
+
+        function authHeaders(extra = {}) {
+            return { 'Authorization': `Bearer ${adminToken}`, ...extra };
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.toggle('error', isError);
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function apiFetch(path, options = {}) {
+            const res = await fetch(`${API_URL}${path}`, {
+                ...options,
+                headers: authHeaders(options.headers || {})
+            });
+            if (res.status === 403 || res.status === 401) {
+                showToast('Sessão de admin expirada. Faça login novamente.', true);
+                localStorage.removeItem('admin_token');
+                setTimeout(() => window.location.href = 'login.html', 1500);
+                throw new Error('Não autorizado');
+            }
+            return res;
+        }
+
+        // ── CLIENTES ──
+        let clientes = [];
+
+        async function carregarClientes() {
+            try {
+                const res = await apiFetch('/admin/clientes');
+                if (!res.ok) throw new Error('Erro ao carregar clientes');
+                clientes = await res.json();
+                exibirClientes();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('tabelaClientes').innerHTML =
+                    `<div class="empty-state">Erro ao carregar clientes.</div>`;
+            }
+        }
+
+        function exibirClientes() {
+            const tabela = document.getElementById('tabelaClientes');
+            document.getElementById('totalClientesLabel').textContent =
+                clientes.length ? `${clientes.length} cadastrado(s)` : '';
+
+            if (!clientes.length) {
+                tabela.innerHTML = `<div class="empty-state">Nenhum cliente cadastrado ainda.</div>`;
+                return;
+            }
+
+            tabela.innerHTML = clientes.map(c => {
+                const numerosHtml = (c.numeros && c.numeros.length)
+                    ? c.numeros.map(n => `
+                        <div>
+                            📱 ${n.numero}${n.nome ? ' — ' + n.nome : ''}
+                            ${n.ativo ? '' : '<em>(inativo)</em>'}
+                            <button class="btn-toggle-link" style="background:none;border:none;color:#c33;cursor:pointer;font-size:11px;" onclick="removerNumero(${n.id})">remover</button>
+                        </div>
+                    `).join('')
+                    : '<span style="color:#bbb;">nenhum número</span>';
+
+                return `
+                    <div class="table-row">
+                        <div>
+                            <strong>${c.nome_negocio}</strong><br>
+                            <span style="color:#999; font-size:12px;">${c.email}</span>
+                        </div>
+                        <div class="numeros-lista">
+                            ${numerosHtml}
+                            <button class="btn btn-outline btn-small" style="margin-top:6px;" onclick="abrirModalNumero(${c.id})">+ número</button>
+                        </div>
+                        <div>
+                            <select class="select-plano" onchange="trocarPlano(${c.id}, this.value)">
+                                <option value="formulario" ${c.plano === 'formulario' ? 'selected' : ''}>Formulário</option>
+                                <option value="ia" ${c.plano === 'ia' ? 'selected' : ''}>IA</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="badge ${c.ativo ? 'badge-ok' : 'badge-off'}">${c.ativo ? 'Ativo' : 'Inativo'}</span>
+                        </div>
+                        <div class="row-actions">
+                            <button class="btn btn-outline btn-small" onclick="toggleAtivo(${c.id}, ${!c.ativo})">
+                                ${c.ativo ? 'Desativar' : 'Ativar'}
+                            </button>
+                            <button class="btn btn-outline-danger btn-small" onclick="deletarCliente(${c.id})">Excluir</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function abrirModalCliente() {
+            document.getElementById('modalCliente').classList.add('show');
+        }
+        function fecharModalCliente() {
+            document.getElementById('modalCliente').classList.remove('show');
+            document.getElementById('novoNomeNegocio').value = '';
+            document.getElementById('novoEmail').value = '';
+            document.getElementById('novaSenha').value = '';
+            document.getElementById('novoPlano').value = 'formulario';
+        }
+
+        async function salvarCliente() {
+            const nome_negocio = document.getElementById('novoNomeNegocio').value.trim();
+            const email = document.getElementById('novoEmail').value.trim();
+            const senha = document.getElementById('novaSenha').value;
+            const plano = document.getElementById('novoPlano').value;
+
+            if (!nome_negocio || !email || !senha) {
+                showToast('Preencha nome, email e senha.', true);
+                return;
+            }
+
+            try {
+                const res = await apiFetch('/admin/clientes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome_negocio, email, senha, plano })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Erro ao criar cliente');
+
+                fecharModalCliente();
+                showToast('Cliente criado com sucesso!');
+                carregarClientes();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function trocarPlano(clienteId, plano) {
+            try {
+                const res = await apiFetch(`/admin/clientes/${clienteId}/plano`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plano })
+                });
+                if (!res.ok) throw new Error('Erro ao trocar plano');
+                showToast('Plano atualizado.');
+                carregarClientes();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function toggleAtivo(clienteId, novoValor) {
+            try {
+                const res = await apiFetch(`/admin/clientes/${clienteId}/ativo`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ativo: novoValor })
+                });
+                if (!res.ok) throw new Error('Erro ao atualizar status');
+                showToast(novoValor ? 'Cliente ativado.' : 'Cliente desativado.');
+                carregarClientes();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function deletarCliente(clienteId) {
+            if (!confirm('Tem certeza que quer excluir este cliente? Isso apaga produtos e histórico dele também.')) return;
+            try {
+                const res = await apiFetch(`/admin/clientes/${clienteId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Erro ao excluir cliente');
+                showToast('Cliente excluído.');
+                carregarClientes();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        // ── NÚMEROS AUTORIZADOS ──
+        function abrirModalNumero(clienteId) {
+            document.getElementById('numeroClienteId').value = clienteId;
+            document.getElementById('modalNumero').classList.add('show');
+        }
+        function fecharModalNumero() {
+            document.getElementById('modalNumero').classList.remove('show');
+            document.getElementById('novoNumero').value = '';
+            document.getElementById('novoNumeroNome').value = '';
+        }
+
+        async function salvarNumero() {
+            const clienteId = document.getElementById('numeroClienteId').value;
+            const numero = document.getElementById('novoNumero').value.trim();
+            const nome = document.getElementById('novoNumeroNome').value.trim();
+
+            if (!numero) {
+                showToast('Informe o número.', true);
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/admin/clientes/${clienteId}/numeros`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero, nome: nome || null })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Erro ao adicionar número');
+
+                fecharModalNumero();
+                showToast('Número adicionado.');
+                carregarClientes();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function removerNumero(numeroId) {
+            if (!confirm('Remover este número autorizado?')) return;
+            try {
+                const res = await apiFetch(`/admin/numeros/${numeroId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Erro ao remover número');
+                showToast('Número removido.');
+                carregarClientes();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        // ── CONEXÃO DO BOT ──
+        async function carregarConexao() {
+            try {
+                const res = await apiFetch('/admin/conexao');
+                if (!res.ok) throw new Error('Erro ao carregar conexão');
+                const conexao = await res.json();
+
+                document.getElementById('conexaoNumero').textContent = conexao?.numero_atual || 'nenhum número conectado';
+                document.getElementById('conexaoStatus').textContent = conexao?.status || '—';
+                document.getElementById('conexaoAtualizado').textContent = conexao?.atualizado_em
+                    ? new Date(conexao.atualizado_em).toLocaleString('pt-BR')
+                    : '—';
+
+                const conectado = conexao?.status === 'conectado';
+                document.getElementById('statusDot').classList.toggle('on', conectado);
+                document.getElementById('statusTexto').textContent = conectado ? 'WhatsApp conectado' : 'WhatsApp desconectado';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('statusTexto').textContent = 'erro ao verificar';
+            }
+        }
+
+        async function verQrCode() {
+            try {
+                const res = await apiFetch('/whatsapp/qrcode');
+                const data = await res.json();
+                if (!data.qr) {
+                    showToast('QR Code ainda não disponível. Tente novamente em alguns segundos.', true);
+                    return;
+                }
+                const win = window.open('', '_blank');
+                win.document.write(`<img src="${data.qr}" style="max-width:100%">`);
+            } catch (err) {
+                showToast('Erro ao buscar QR Code: ' + err.message, true);
+            }
+        }
+
+        async function resetarConexao() {
+            if (!confirm('Isso desconecta o WhatsApp atual e exige escanear um novo QR Code. Continuar?')) return;
+            try {
+                const res = await apiFetch('/admin/conexao/resetar', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Erro ao resetar conexão');
+                showToast('Sessão resetada. Abra o QR Code para reconectar.');
+                carregarConexao();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function notificarClientes() {
+            if (!confirm('Enviar aviso de número atualizado para todos os números autorizados ativos?')) return;
+            try {
+                const res = await apiFetch('/admin/conexao/notificar-clientes', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Erro ao notificar clientes');
+                showToast(`Aviso enviado para ${data.notificados} número(s).`);
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        // ── LOG DE TROCAS ──
+        async function carregarLogTrocas() {
+            try {
+                const res = await apiFetch('/admin/log-trocas');
+                if (!res.ok) throw new Error('Erro ao carregar log');
+                const log = await res.json();
+                const container = document.getElementById('logTrocas');
+
+                if (!log.length) {
+                    container.innerHTML = `<div class="empty-state">Nenhuma troca registrada ainda.</div>`;
+                    return;
+                }
+
+                container.innerHTML = log.slice(0, 8).map(l => `
+                    <div class="conexao-linha">
+                        <span class="label">${l.numero_antigo || '(primeira conexão)'} → <strong>${l.numero_novo}</strong></span>
+                        <span class="valor" style="font-weight:400; color:#999; font-size:12px;">
+                            ${new Date(l.criado_em).toLocaleString('pt-BR')}
+                        </span>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // Carregar tudo ao iniciar
+        carregarClientes();
+        carregarConexao();
+        carregarLogTrocas();
+
+        // Atualiza status de conexão periodicamente
+        setInterval(carregarConexao, 15000);
+    </script>
+</body>
+</html>

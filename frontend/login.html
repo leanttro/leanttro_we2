@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque WPP - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .logo p {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .btn-login.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .toggle-mode {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .toggle-mode p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-toggle {
+            color: #667eea;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+        
+        .btn-toggle:hover {
+            color: #764ba2;
+        }
+        
+        .error {
+            background-color: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        #adminPanel {
+            display: none;
+        }
+        
+        .admin-token-group {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>📦 Estoque WPP</h1>
+            <p>Gerenciador de Estoque via WhatsApp</p>
+        </div>
+        
+        <div class="error" id="errorMsg"></div>
+        
+        <!-- MODO CLIENTE -->
+        <div id="clientPanel">
+            <h2 style="color: #333; margin-bottom: 25px; font-size: 20px;">Acesso Cliente</h2>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="seu@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="senha" placeholder="••••••••">
+            </div>
+            
+            <button class="btn-login" onclick="loginCliente()">Entrar</button>
+            
+            <div class="toggle-mode">
+                <p>Você é administrador?</p>
+                <button class="btn-toggle" onclick="toggleMode()">Acesso Admin</button>
+            </div>
+        </div>
+        
+        <!-- MODO ADMIN -->
+        <div id="adminPanel">
+            <h2 style="color: #333; margin-bottom: 25px; font-size: 20px;">Acesso Admin</h2>
+            
+            <div class="admin-token-group">
+                <div class="form-group">
+                    <label>Token Admin</label>
+                    <input type="password" id="adminToken" placeholder="cole seu token">
+                </div>
+                
+                <button class="btn-login" onclick="loginAdmin()">Entrar</button>
+            </div>
+            
+            <div class="toggle-mode">
+                <p>Você é cliente?</p>
+                <button class="btn-toggle" onclick="toggleMode()">Acesso Cliente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        
+        function toggleMode() {
+            document.getElementById('clientPanel').style.display = 
+                document.getElementById('clientPanel').style.display === 'none' ? 'block' : 'none';
+            document.getElementById('adminPanel').style.display = 
+                document.getElementById('adminPanel').style.display === 'none' ? 'block' : 'none';
+            clearError();
+        }
+        
+        function showError(msg) {
+            const err = document.getElementById('errorMsg');
+            err.textContent = msg;
+            err.classList.add('show');
+        }
+        
+        function clearError() {
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+        
+        function setButtonLoading(btn, loading) {
+            btn.classList.toggle('loading', loading);
+            btn.disabled = loading;
+        }
+        
+        async function loginCliente() {
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            
+            if (!email || !senha) {
+                showError('Preencha email e senha');
+                return;
+            }
+            
+            const btn = event.target;
+            setButtonLoading(btn, true);
+            clearError();
+            
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    showError(data.detail || 'Erro ao login');
+                    setButtonLoading(btn, false);
+                    return;
+                }
+                
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('cliente_id', data.cliente_id);
+                localStorage.setItem('tipo', 'cliente');
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                showError('Erro de conexão: ' + err.message);
+                setButtonLoading(btn, false);
+            }
+        }
+        
+        async function loginAdmin() {
+            const token = document.getElementById('adminToken').value;
+            
+            if (!token) {
+                showError('Preencha o token admin');
+                return;
+            }
+            
+            const btn = event.target;
+            setButtonLoading(btn, true);
+            clearError();
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/clientes`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!res.ok) {
+                    showError('Token inválido');
+                    setButtonLoading(btn, false);
+                    return;
+                }
+                
+                localStorage.setItem('admin_token', token);
+                localStorage.setItem('tipo', 'admin');
+                window.location.href = 'admin.html';
+            } catch (err) {
+                showError('Erro de conexão: ' + err.message);
+                setButtonLoading(btn, false);
+            }
+        }
+        
+        // Detectar ENTER nas inputs
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (document.getElementById('clientPanel').style.display !== 'none') {
+                    loginCliente();
+                } else {
+                    loginAdmin();
+                }
+            }
+        });
+        
+        // Verificar se já tá logado
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('token');
+            const adminToken = localStorage.getItem('admin_token');
+            
+            if (token) window.location.href = 'dashboard.html';
+            if (adminToken) window.location.href = 'admin.html';
+        });
+    </script>
+</body>
+</html>

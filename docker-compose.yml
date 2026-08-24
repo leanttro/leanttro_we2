@@ -1,0 +1,62 @@
+version: '3.8'
+
+# ═════════════════════════════════════════
+# APLICAÇÃO 2 — API (FastAPI) + FRONTEND (nginx)
+# Deploy separado no Dokploy. É aqui que fica o domínio
+# wpp.leanttro.com, apontando pro nginx.
+# ═════════════════════════════════════════
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: estoque-wpp-api
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-admin-token-change-in-production}
+      GROQ_API_KEY_1: ${GROQ_API_KEY_1:-}
+      GROQ_API_KEY_2: ${GROQ_API_KEY_2:-}
+      DATABASE_URL: ${DATABASE_URL}
+      # Aponta pro container do Baileys, que roda na OUTRA aplicação
+      BAILEYS_URL: http://estoque-wpp-baileys:3000
+      API_BASE_URL: http://estoque-wpp-api:8000
+      API_WEBHOOK_URL: http://estoque-wpp-baileys:3000/webhook/mensagem
+    volumes:
+      - ./api/app.py:/app/app.py
+      - ./api/requirements.txt:/app/requirements.txt
+    networks:
+      - app-network
+      - dokploy-network
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+    restart: always
+    # Sem "ports" publicada: quem fala com a API de fora é o nginx.
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: estoque-wpp-nginx
+    depends_on:
+      - api
+    networks:
+      - app-network
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wpp-nginx.rule=Host(`wpp.leanttro.com`)"
+      - "traefik.http.routers.wpp-nginx.entrypoints=websecure"
+      - "traefik.http.routers.wpp-nginx.tls.certresolver=letsencrypt"
+      - "traefik.http.services.wpp-nginx.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
+  dokploy-network:
+    external: true
